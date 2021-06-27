@@ -64,5 +64,8 @@ function basicSearchAndPlay(query, type = ['track'], market = 'US', limit = 1, o
 			}),
 		});
 		return `Playing ${track.name}`;
+	})
+	.catch(e => {
+		return e.message;
 	});
 }
