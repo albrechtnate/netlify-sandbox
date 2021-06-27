@@ -58,7 +58,7 @@ function basicSearchAndPlay(query, type = ['track'], market = 'US', limit = 1, o
 		return {uri: result.uri, name: result.name};
 	})
 	.then(track => {
-		fetch('https://api.spotify.com/v1/me/player/play', {
+		return fetch('https://api.spotify.com/v1/me/player/play', {
 			method: 'PUT',
 			headers: {
 				'Authorization': `Bearer ${accessToken}`
@@ -67,6 +67,7 @@ function basicSearchAndPlay(query, type = ['track'], market = 'US', limit = 1, o
 				uris: [track.uri],
 			}),
 		}).then(res => {
+			console.log(res);
 			if (! res.ok)
 			{
 				res.json().then(j => console.log(j));
