@@ -3,6 +3,9 @@ const accessToken = process.env.ACCESS_TOKEN;
 
 exports.handler = async (event, context) => {
 
+	console.log(accessToken);
+	console.log(event.queryStringParameters.q);
+
 	event.queryStringParameters
 
 	if ('q' in event.queryStringParameters)
@@ -51,6 +54,7 @@ function basicSearchAndPlay(query, type = ['track'], market = 'US', limit = 1, o
 		{
 			throw new Error('Not playable');
 		}
+		console.log(`Spotify found song: ${result.name} (${result.uri})`);
 		return {uri: result.uri, name: result.name};
 	})
 	.then(track => {
@@ -62,8 +66,14 @@ function basicSearchAndPlay(query, type = ['track'], market = 'US', limit = 1, o
 			body: JSON.stringify({
 				uris: [track.uri],
 			}),
-		});
-		return `Playing ${track.name}`;
+		}).then(res => {
+			if (! res.ok)
+			{
+				res.json().then(j => console.log(j));
+				throw new Error('Play response code not ok: ' + res.status);
+			}
+			return `Playing ${track.name}`;
+		})
 	})
 	.catch(e => {
 		return e.message;
