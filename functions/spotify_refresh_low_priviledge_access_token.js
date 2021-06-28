@@ -6,7 +6,7 @@ const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 
 exports.handler = async (event, context) => {
 
-	const access_token_data = await refresh_token;
+	const access_token_data = await refreshAccessToken();
 
 	if (access_token_data)
 	{
