@@ -26,7 +26,7 @@ exports.handler = async (event, context) => {
 
 function refreshAccessToken()
 {
-	const unixTimestamp = Performance.now();
+	const unixTimestamp = Date.now();
 
 	fetch('https://accounts.spotify.com/api/token', {
 		method: 'POST',
