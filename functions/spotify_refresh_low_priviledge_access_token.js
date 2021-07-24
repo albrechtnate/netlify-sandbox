@@ -12,13 +12,18 @@ const client = new faunadb.Client({
 
 exports.handler = async (event, context) => {
 
-	const access_token_data = await refreshAccessToken();
+	const refresh = 'refresh' in event.queryStringParameters && event.queryStringParameters.refresh === 'true';
 
-	if (access_token_data)
+	const accessToken = await getAccessToken('spotify', 'access', 'low', refresh);
+	console.log(accessToken);
+
+	//const access_token_data = await refreshAccessToken();
+
+	if (accessToken)
 	{
 		return {
 			statusCode: 200,
-			body: JSON.stringify(access_token_data),
+			body: accessToken.data.token,
 		};
 	}
 	else
@@ -35,11 +40,46 @@ exports.handler = async (event, context) => {
 	}
 };
 
+async function getAccessToken(api, type, privilegeLevel, refresh = false)
+{
+	if (refresh)
+	{
+		console.log('Force generating a new token');
+		const newAccessToken = await refreshAccessToken();
+		return await saveAccessToken(newAccessToken.accessToken, api, type, privilegeLevel, Date.now() + (newAccessToken.ttl * 1000));
+	}
+
+	const existingToken = await client.query(
+
+		q.Let(
+			{token: q.Match(q.Index('token_by_type'), [api, type, privilegeLevel])},
+			q.If(
+				q.IsNonEmpty(q.Var('token')),
+				q.Get(
+					q.Var('token')
+				),
+				null
+			)
+		)
+
+	);
+
+	if (existingToken !== null)
+	{
+		console.log('Returning cached token');
+		return existingToken;
+	}
+	else
+	{
+		console.log('Generating a new token');
+		const newAccessToken = await refreshAccessToken();
+		return await saveAccessToken(newAccessToken.accessToken, api, type, privilegeLevel, Date.now() + (newAccessToken.ttl * 1000));
+	}
+}
+
 
 function refreshAccessToken()
 {
-	const unixTimestamp = Date.now();
-
 	return fetch('https://accounts.spotify.com/api/token', {
 		method: 'POST',
 		headers: {
@@ -81,11 +121,11 @@ function refreshAccessToken()
 		if ('access_token' in json && 'expires_in' in json)
 		{
 			const data = {
-				access_token: json.access_token,
-				expiration_time: unixTimestamp + json.expires_in - (10*1000) // 10 second “margin”
+				accessToken: json.access_token,
+				ttl: json.expires_in
 			};
 
-			await saveAccessToken(data);
+			//return await saveAccessToken(data.accessToken, 'spotify', 'access', 'low', data.expirationTime);
 			return data;
 		}
 		else
@@ -100,30 +140,40 @@ function refreshAccessToken()
 	});
 }
 
-function saveAccessToken(data)
+function saveAccessToken(token, api, type, privilegeLevel, expiresTimestamp)
 {
 	return client.query(
-		q.Map(
-			q.Paginate(
-				q.Match(
-					q.Index('token'),
-					['spotify', 'low']
-				),
-				{ size: 1 }
-			),
-			q.Lambda(
-				'tokenRef',
-				q.Update(
-					q.Var('tokenRef'),
+
+		q.Let(
+			{token: q.Match(q.Index('token_by_type'), [api, type, privilegeLevel])},
+			q.If(
+				q.IsEmpty(q.Var('token')),
+				q.Create(
+					'tokens',
 					{
 						data: {
-							access_token: data.access_token,
-							expires: data.expiration_time,
-						}
+							token: token,
+							api: api,
+							type: type,
+							privilege_level: privilegeLevel,
+							expires_timestamp: expiresTimestamp,
+						},
+						ttl: q.Epoch(expiresTimestamp, 'milliseconds')
+					}
+				),
+				q.Update(
+					q.Select('ref', q.Get(q.Var('token'))),
+					{
+						data: {
+							token: token,
+							expires_timestamp: expiresTimestamp,
+						},
+						ttl: q.Epoch(expiresTimestamp, 'milliseconds')
 					}
 				)
 			)
-		),
+		)
+
 	)
 	.catch((err) => {
 		console.error('Error: %s', err);
