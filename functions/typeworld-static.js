@@ -107,7 +107,12 @@ const static = {
                   "name":{
                      "en":"Fake Family"
                   },
-                  "uniqueID":"qwerty"
+                  "uniqueID":"qwerty",
+                  "versions": [
+                     {
+                        "number": "1.0"
+                     }
+                  ]
                }
             ],
             "licenses":[
@@ -122,12 +127,7 @@ const static = {
             "name":{
                "en":"Nathan Albrecht Fake Foundry"
             },
-            "uniqueID":"ABC",
-            "versions": [
-               {
-                  "number": "1.0"
-               }
-            ]
+            "uniqueID":"ABC"
          }
       ],
       "prefersRevealedUserIdentity":false,
