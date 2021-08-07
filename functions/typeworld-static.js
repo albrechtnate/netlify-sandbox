@@ -4,7 +4,7 @@ const static = {
       "allowedCommercialApps":[
          "world.type.app"
       ],
-      "canonicalURL":"https://nathanalbrecht.com/typeworld-playground/static.json",
+      "canonicalURL":"https://api.nathanalbrecht.com/typeworld-static",
       "licenseIdentifier":"CC-BY-NC-ND-4.0",
       "name":{
          "en":"Nathan Albrecht Static Playground"
@@ -122,7 +122,12 @@ const static = {
             "name":{
                "en":"Nathan Albrecht Fake Foundry"
             },
-            "uniqueID":"ABC"
+            "uniqueID":"ABC",
+            "versions": [
+               {
+                  "number": "1.0"
+               }
+            ]
          }
       ],
       "prefersRevealedUserIdentity":false,
