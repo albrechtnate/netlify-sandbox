@@ -93,11 +93,11 @@ function refreshAccessToken()
 		body: new URLSearchParams({
 			grant_type: 'refresh_token',
 			refresh_token: REFRESH_TOKEN,
-			// scope: [
-			// 	'user-read-currently-playing',
-			// 	'user-read-recently-played',
-			// 	'user-top-read',
-			// ].join(' ')
+			scope: [
+				'user-read-currently-playing',
+				'user-read-recently-played',
+				'user-top-read',
+			].join(' ')
 		}),
 	})
 	.then(async res => ({
